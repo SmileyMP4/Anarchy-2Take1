@@ -46,35 +46,37 @@ if anarchy_code == 200 and lib_code == 200 then
     local github_update_date <const> = string.match(anarchy_body, 'local%s+lua_update_date%s+<const>%s*=%s*"([%d/]+)"')
     local github_lib_version <const> = string.match(lib_body, 'lib_version%s*=%s*"([^"]+)"')
     if github_version == github_lib_version and github_version ~= lua_version then
-        lua_notify("Anarchy v" .. github_version .. " is now available.\nDownload in progress ...", "New Version")
-        local file <const> = io.open(Anarchy_File, "w")
-        io.output(file)
-        io.write(anarchy_body)
-        io.close(file)
-
-        local file <const> = io.open(Lib_File, "w")
-        io.output(file)
-        io.write(lib_body)
-        io.close(file)
-
-        lua_notify("Download finish.", "Finish")
-
-        dofile(Anarchy_File)
-        return
+        lua_notify("Anarchy v" .. pastebin_version .. " is now available.\nClick on the button to update the script.", "Update Available")
     end
 else
+    if anarchy_code == lib_code then
+        if anarchy_code == 0 then
+            if web.get("https://google.com") == 0 then
+                lua_notify_alert("You do not have an internet connection.", "Web Request Failed")
+                menu.exit()
+                return
+            else
+                lua_notify_alert("It's possible that your antivirus software is blocking requests from specific websites.\nIn such a scenario, disable any settings that could be affecting your internet connection.\nIf the issue persists, reported the problem on discord.", "Web Request Failed")
+                menu.exit()
+                return
+            end
+        end
+        lua_notify_alert("Reported the problem on discord.\nError code: " .. anarchy_code, "Web Request Failed")
+        menu.exit()
+        return
+    else
+
+    end
     if anarchy_code == 0 or lib_code == 0 then
-        --[[
-        if not lib.essentials.is_connected_to_internet() then
+        if web.get("https://google.com") == 0 then
             lua_notify_alert("You do not have an internet connection.", "Internet Connection")
             menu.exit()
             return
         else
-            lua_notify_alert("It's possible that your antivirus software is blocking requests from specific websites. In such a scenario, disable any settings that could be affecting your internet connection. If the issue persists, reported the problem on discord.", "Antivirus Software")
+            lua_notify_alert("It's possible that your antivirus software is blocking requests from specific websites. In such a scenario, disable any settings that could be affecting your internet connection. If the issue persists, reported the problem on discord.", "Web Request Failed")
             menu.exit()
             return
         end
-        ]]
     end
     lua_notify_alert("Reported the problem on discord.\nError code: " .. response_code, "Update Check Failed")
     menu.exit()
@@ -84,7 +86,20 @@ end
 local lib <const> = require("Anarchy\\Lib")
 
 menu.add_feature("Test" .. lua_version, "action", 0, function(f)
+    local file <const> = io.open(Anarchy_File, "w")
+    io.output(file)
+    io.write(anarchy_body)
+    io.close(file)
 
+    local file <const> = io.open(Lib_File, "w")
+    io.output(file)
+    io.write(lib_body)
+    io.close(file)
+
+    lua_notify("Download finish.", "Finish")
+
+    menu.exit()
+    dofile(Anarchy_File)
 end)
 
 lua_notify("Version: " .. Jaune .. lua_version .. BleuClair .. "\nUpdated on: " .. Jaune .. lua_update_date .. BleuClair .. "\nDev: " .. Jaune .. "[3arc] Smiley" .. BleuClair .. "\n\nAnarchy is correctly loaded.", notify_default)

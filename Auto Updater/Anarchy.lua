@@ -1,1 +1,19 @@
- 
+local Blanc <const> = "#FFFFFFFF#"
+    local Noir <const> = "#FF000000#"
+    local Rouge <const> = "#FF0000FF#"
+    local RougeClair <const> = "#FFAAAAFF#"
+    local Vert <const> = "#FF00FF00#"
+    local Bleu <const> = "#FFFF0000#"
+    local BleuClair <const> = "#FFFFDDAA#"
+    local Jaune <const> = "#FF00FFFF#"
+    local JauneClair <const> = "#FFAAFFFF#"
+    
+    local _Blanc <const> = 0xFFFFFFFF
+    local _Noir <const> = 0xFF000000
+    local _Rouge <const> = 0xFF0000FF
+    local _RougeClair <const> = 0xFFAAAAFF
+    local _Vert <const> = 0xFF00FF00
+    local _Bleu <const> = 0xFFFF0000
+    local _BleuClair <const> = 0xFFFFDDAA
+    local _Jaune <const> = 0xFF00FFFF
+    local _JauneClair <const> = 0xFFAAFFFF

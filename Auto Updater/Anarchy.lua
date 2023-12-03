@@ -46,7 +46,7 @@ if anarchy_code == 200 and lib_code == 200 then
     local github_update_date <const> = string.match(anarchy_body, 'local%s+lua_update_date%s+<const>%s*=%s*"([%d/]+)"')
     local github_lib_version <const> = string.match(lib_body, 'lib_version%s*=%s*"([^"]+)"')
     if github_version == github_lib_version and github_version ~= lua_version then
-        lua_notify("Anarchy v" .. pastebin_version .. " is now available.\nClick on the button to update the script.", "Update Available")
+        lua_notify("Anarchy v" .. github_version .. " is now available.\nClick on the button to update the script.", "Update Available")
     end
 else
     if anarchy_code == lib_code then

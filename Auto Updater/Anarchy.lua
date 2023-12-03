@@ -46,7 +46,7 @@ if anarchy_code == 200 and lib_code == 200 then
     local github_update_date <const> = string.match(anarchy_body, 'local%s+lua_update_date%s+<const>%s*=%s*"([%d/]+)"')
     local github_lib_version <const> = string.match(lib_body, 'lib_version%s*=%s*"([^"]+)"')
     if github_version == github_lib_version and github_version ~= lua_version then
-        lua_notify("Anarchy v" .. pastebin_version .. " is now available.\nDownload in progress ...", "New Version")
+        lua_notify("Anarchy v" .. github_version .. " is now available.\nDownload in progress ...", "New Version")
         local file <const> = io.open(Anarchy_File, "w")
         io.output(file)
         io.write(anarchy_body)

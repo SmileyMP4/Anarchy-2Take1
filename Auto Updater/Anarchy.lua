@@ -89,7 +89,8 @@ local lib_code, lib_body = web.get(github_lib)
 
 lib_body = lib_body:gsub("\n", "")
 lib_body = lib_body:gsub("\n\n", "\n")
-
+lib_body = lib_body:gsub("\n$", "")
+		
 local Update_Available = false
 if anarchy_code == 200 and lib_code == 200 then
     local github_anarchy_version <const> = string.match(anarchy_body, 'local%s+lua_version%s+<const>%s*=%s*"([^"]+)"')

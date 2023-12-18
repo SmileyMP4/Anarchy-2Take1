@@ -45,6 +45,12 @@ function lua_notify_alert(message, title)
     menu.notify(RougeClair .. tostring(message), Rouge .. tostring(title), 10, _Rouge)
 end
 
+if anarchy then
+    lua_notify_alert("Anarchy is already loaded.", "Already Load")
+    menu.exit()
+    return
+end
+
 function update_lua(anarchy_body, lib_body)
     local file <const> = io.open(Anarchy_File, "w")
     io.output(file)
@@ -54,12 +60,6 @@ function update_lua(anarchy_body, lib_body)
     io.output(file)
     io.write(lib_body)
     io.close(file)
-end
-
-if anarchy then
-    lua_notify_alert("Anarchy is already loaded.", "Already Load")
-    menu.exit()
-    return
 end
 
 local message = ""
@@ -87,10 +87,8 @@ end
 local anarchy_code, anarchy_body = web.get(github_anarchy)
 local lib_code, lib_body = web.get(github_lib)
 
-lib_body = lib_body:gsub("([^\n])\n([^\n])", "%1%2")
-lib_body = lib_body:gsub("\n\n\n", "\n")
-
-menu.notify(lib_body)
+lib_body = lib_body:gsub("\n", "")
+lib_body = lib_body:gsub("\n\n", "\n")
 
 local Update_Available = false
 if anarchy_code == 200 and lib_code == 200 then

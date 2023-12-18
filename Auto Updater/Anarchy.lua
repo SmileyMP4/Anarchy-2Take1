@@ -126,10 +126,11 @@ end
 
 local lib <const> = require("Anarchy\\Lib")
 
-if lua_version ~= lib.lib_version then
+if lua_version ~= lib_version and not skip_update_file then
     lua_notify_alert("Lib file must be updated.\nThe lua will be completely re-downloaded to solve this problem.", "Require Updated File")
     update_lua(anarchy_body, lib_body)
     lua_notify("Installation is complete, lua will restart automatically.", "Installation Finish")
+    skip_update_file = true
     dofile(Anarchy_File)
     return
 end

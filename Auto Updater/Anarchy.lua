@@ -1,6 +1,6 @@
 menu.create_thread(function()
 
-local lua_version <const> = "1.2.1"
+local lua_version <const> = "1.2.0"
 
 local lua_update_date <const> = "18/12/2023"
 
@@ -126,7 +126,7 @@ end
 
 local lib <const> = require("Anarchy\\Lib")
 
-if lib_version ~= lua_version then
+if lua_version ~= lib.lib_version then
     lua_notify_alert("Lib file must be updated.\nThe lua will be completely re-downloaded to solve this problem.", "Require Updated File")
     update_lua(anarchy_body, lib_body)
     lua_notify("Installation is complete, lua will restart automatically.", "Installation Finish")
@@ -134,12 +134,12 @@ if lib_version ~= lua_version then
     return
 end
 
-anarchy = true
-
 local gta_version <const> = tonumber(lib.natives.GET_ONLINE_VERSION())
 if gta_version ~= 1.68 then
     lua_notify_alert("Anarchy is " .. Jaune .. "incompatible " .. RougeClair .. "with the version of gta " .. Jaune .. "v" .. gta_version..RougeClair .. ".\nScript event and global may not work.", "Incompatible GTA Version")
 end
+
+anarchy = true
 
 local Threads <const> = {}
 local Player_Parents <const> = {}

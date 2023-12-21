@@ -1,8 +1,8 @@
 menu.create_thread(function()
 
-local lua_version <const> = "1.2.0"
+local lua_version <const> = "1.2.1"
 
-local lua_update_date <const> = "18/12/2023"
+local lua_update_date <const> = "21/12/2023"
 
 local notify_default <const> = "Anarchy v" .. lua_version
 
@@ -163,7 +163,6 @@ local ProtectionFlags <const> = {
     ["Modded Carjacking"] = player.add_modder_flag("Modded Carjacking"),
     ["Lag Player"] = player.add_modder_flag("Lag Player"),
     ["Modded Entity"] = player.add_modder_flag("Modded Entity"),
-    ["Taylor Swift Crash"] = player.add_modder_flag("Taylor Swift Crash"),
 }
 
 local ModderFlags <const> = {
@@ -223,6 +222,9 @@ menu.create_thread(function()
         system.wait(10000)
         anarchy_code, anarchy_body = web.get(github_anarchy)
         lib_code, lib_body = web.get(github_lib)
+
+        lib_body = lib_body:gsub("\n", "")
+        lib_body = lib_body:gsub("\n\n", "\n")
 
         if anarchy_code == 200 and lib_code == 200 then
             local github_anarchy_version <const> = string.match(anarchy_body, 'local%s+lua_version%s+<const>%s*=%s*"([^"]+)"')
@@ -727,33 +729,6 @@ Player_Feature["Off The Radar"] = menu.add_player_feature("Off The Radar", "togg
     end
 end)
 
-Player_Feature["Set bounty"] = menu.add_player_feature("Set bounty", "value_str", Player_Parents["Funny"].id, function(f, pid)
-    local input_stat, input_val = input.get("Value from " .. f.min .. " to " .. f.max, 10000, 5, 3)
-    if input_stat == 1 then
-        return HANDLER_CONTINUE
-    end
-    if input_stat == 2 then
-        f.on = false
-        lua_notify_alert("Input canceled.", f.name)
-        return HANDLER_POP
-    end
-    input_val = tonumber(input_val)
-    if input_val > 10000 then
-        input_val = 10000
-    elseif input_val < 1 then
-        input_val = 1
-    else
-        input_val = input_val
-    end
-    while f.on do
-        if not lib.globals.is_player_bounty(pid) then
-            lib.scriptevent.set_bounty(pid, input_val, f.value == 0)
-        end
-        system.wait(100)
-    end
-end)
-Player_Feature["Set bounty"]:set_str_data({"Anonymous", "Named"})
-
 Player_Feature["Never Wanted"] = menu.add_player_feature("Never Wanted", "value_str", Player_Parents["Funny"].id, function(f, pid)
     while f.on do
         if player.get_player_wanted_level(pid) ~= 0 then
@@ -838,7 +813,11 @@ Player_Feature["Kick From"] = menu.add_player_feature("Kick From", "action_value
             lua_notify_alert(lib.player.get_player_name(pid) .. " isn't in an interior.", f.name)
         end
     else
-        lib.scriptevent.kick_from_organization(pid)
+        if lib.globals.is_player_organization(pid) then
+            lib.scriptevent.kick_from_organization(pid)
+        else
+            lua_notify_alert(lib.player.get_player_name(pid) .. " isn't in an organization.", f.name)
+        end
     end
 end)
 Player_Feature["Kick From"]:set_str_data({"Interior", "Organization"})
@@ -1824,9 +1803,9 @@ Player_Feature["Engine"] = menu.add_player_feature("Engine", "action_value_str",
             end
         elseif f.value == 2 then
             if lib.essentials.request_control(plyrvehicle, 2500) then
-                vehicle.set_vehicle_engine_on(plyrvehicle, false, true, false)
+                vehicle.set_vehicle_engine_on(plyrvehicle, true, true, false)
             else
-                lua_notify_alert("Failed to revive engine.", f.name)
+                lua_notify_alert("Failed to turn off engine.", f.name)
             end
         end
     end)
@@ -2062,7 +2041,7 @@ Player_Feature["Ultra Lag Player"] = menu.add_player_feature("Ultra Lag Player",
             entity.set_entity_gravity(LagPlayer[i], false)
         end
         NtwrkJetski = lib.entity.spawn_entity(gameplay.get_hash_key("A_M_Y_Jetski_01"), v3(10000, 10000, 2600), 0, false, true, false, true, false, false)
-        lua_notify(lib.player.get_player_name(pid).." received the ultra lag well.", f.name)
+        lua_notify(lib.player.get_player_name(pid) .. " received the ultra lag well.", f.name)
         while f.on do
             for i in ipairs(LagPlayer) do
                 entity.attach_entity_to_entity(LagPlayer[i], NtwrkJetski, 0, v3(0, 0, 0), v3(math.random(0, 360), math.random(0, 360), math.random(0, 360)), false, true, false, 0, true)
@@ -2160,7 +2139,7 @@ Player_Feature["Slod Crash"] = menu.add_player_feature("Slod Crash", "action_val
     local slod_1, slod_2, slod_3
     menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".spectate_player").on = false
     local save_pos <const> = player.get_player_coords(player.player_id())
-    entity.set_entity_coords_no_offset(player.player_ped(), v3(8000, 8000, 1000))
+    entity.set_entity_coords_no_offset(player.player_ped(), v3(10000, 10000, 2600))
     entity.freeze_entity(player.player_ped(), true)
     if f.value == 0 or f.value == 3 then
         slod_1 = lib.entity.spawn_entity(gameplay.get_hash_key("slod_human"), player.get_player_coords(pid), 0, false, true, true, true, false, true)
@@ -2230,7 +2209,7 @@ Player_Feature["Ped Component Variation Crash"] = menu.add_player_feature("Ped C
     if lib.player.its_me(pid, f.name, f) then return end
     menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".spectate_player").on = false
     local save_pos <const> = player.get_player_coords(player.player_id())
-    entity.set_entity_coords_no_offset(player.player_ped(), v3(8000, 8000, 1000))
+    entity.set_entity_coords_no_offset(player.player_ped(), v3(10000, 10000, 2600))
     entity.freeze_entity(player.player_ped(), true)
     local ped_variation <const> = lib.entity.spawn_entity(gameplay.get_hash_key("Player_Zero"), player.get_player_coords(pid), 0, false, true, true, true, false, true)
     ped.set_ped_component_variation(ped_variation, 0, 0, 7, 0)
@@ -2518,7 +2497,7 @@ Player_Feature["Look Crash"] = menu.add_player_feature("Look Crash", "action", P
     if lib.player.its_me(pid, f.name, f) then return end
     menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".spectate_player").on = false
     local save_pos <const> = player.get_player_coords(player.player_id())
-    entity.set_entity_coords_no_offset(player.player_ped(), v3(8000, 8000, 1000))
+    entity.set_entity_coords_no_offset(player.player_ped(), v3(10000, 10000, 2600))
     entity.freeze_entity(player.player_ped(), true)
     local ent <const> = lib.entity.spawn_world_object(gameplay.get_hash_key("minitank"), player.get_player_coords(pid), 0, false, true, false, false, false, true, false)
     lua_notify(lib.player.get_player_name(pid) .. " received the crash well.", f.name)
@@ -2842,7 +2821,7 @@ Local_Feature["Walk Under Water"] = menu.add_feature("Walk Under Water", "toggle
             pos2.x = pos.x
             pos2.y = pos.y
             pos2.z = lib.essentials.get_ground_z_under_water(v2(pos.x, pos.y))
-            if pos:magnitude(pos2) > 10 then
+            if lib.essentials.distance_between(pos, pos2) > 10 then
                 entity.apply_force_to_entity(player.player_ped(), 1, 0, 0, -75, 0, 0, 0, false, true)
             end
         end
@@ -3264,6 +3243,30 @@ Local_Feature["Kick"] = menu.add_feature("Kick", "action", Local_Parents["Multi 
     end)
 end)
 
+local bounty_value = 10000
+Local_Feature["Set bounty"] = menu.add_feature("Set bounty (" .. bounty_value .. ")", "value_str", Local_Parents["Multi Selection"], function(f, pid)
+    if f.value == 2 then
+        f.on = false
+        local input <const> = lib.essentials.input("Bounty value from 1 to 1000", bounty_value, 4, 3, f, 1, 1000)
+        if input then
+            bounty_value = input
+            f.name = "Set bounty (" .. bounty_value .. ")"
+        end
+    end
+    while f.on do
+        if f.value == 2 then
+            f.on = false
+        end
+        multi_selection_executor(function(pid)
+            if not lib.globals.is_player_bounty(pid) then
+                lib.scriptevent.set_bounty(pid, bounty_value, f.value == 0)
+            end
+        end)
+        system.wait()
+    end
+end)
+Local_Feature["Set bounty"]:set_str_data({"Anonymous", "Named", "Value"})
+
 Local_Feature["Teleport Player To"] = menu.add_feature("Teleport Player To", "action_value_str", Local_Parents["Multi Selection"], function(f, pid)
     multi_selection_executor(function(pid)
         if f.value == 0 then
@@ -3501,77 +3504,40 @@ Local_Feature["Money + Card Drop Settings Apply Force"].value = -25
 
 Local_Parents["Collectibles"] = menu.add_feature("Collectibles", "parent", Local_Parents["Multi Selection"]).id
 
-Local_Feature["LD Organics Merchandise"] = menu.add_feature("LD Organics Merchandise", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.ld_organics_merchandise(pid)
-    end)
-end)
+local All_Collectibles <const> = {
+    "G's Cache",
+    "Halloween Tshirt",
+    "LD Organics Merchandise",
+    "Media USBs",
+    "Movie Props",
+    "Radio Antennas",
+    "Snowmen",
+}
 
-Local_Feature["Movie Props"] = menu.add_feature("Movie Props", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.movie_props(pid)
-    end)
-end)
+local All_Daily_Collectibles <const> = {
+    "Buried Stashes",
+    "Hidden Caches",
+    "Jack O' Lanterns",
+    "Junk Energy Skydives",
+    "Shipwrecks",
+    "Treasure Chests",
+}
 
-Local_Feature["Snowmen"] = menu.add_feature("Snowmen", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.snowmen(pid)
+for _, name in pairs(All_Collectibles) do
+    Local_Feature[name] = menu.add_feature(name, "action", Local_Parents["Collectibles"], function(f)
+        multi_selection_executor(function(pid)
+            lib.scriptevent.give_collectibles(pid, name)
+        end)
     end)
-end)
+end
 
-Local_Feature["Radio Antennas"] = menu.add_feature("Radio Antennas", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.radio_antennas(pid)
+for _, name in pairs(All_Daily_Collectibles) do
+    Local_Feature[name .. " (Daily)"] = menu.add_feature(name .. " (Daily)", "action", Local_Parents["Collectibles"], function(f)
+        multi_selection_executor(function(pid)
+            lib.scriptevent.give_collectibles(pid, name)
+        end)
     end)
-end)
-
-Local_Feature["Media USBs"] = menu.add_feature("Media USBs", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.media_usb(pid)
-    end)
-end)
-
-Local_Feature["G's Cache"] = menu.add_feature("G's Cache", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.g_s_cache(pid)
-    end)
-end)
-
-Local_Feature["Buried Stashes (Daily)"] = menu.add_feature("Buried Stashes (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.buried_stashes(pid)
-    end)
-end)
-
-Local_Feature["Hidden Caches (Daily)"] = menu.add_feature("Hidden Caches (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.hidden_caches(pid)
-    end)
-end)
-
-Local_Feature["Junk Energy Skydives (Daily)"] = menu.add_feature("Junk Energy Skydives (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.junk_energy_skydives(pid)
-    end)
-end)
-
-Local_Feature["Shipwrecks (Daily)"] = menu.add_feature("Shipwrecks (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.shipwrecks(pid)
-    end)
-end)
-
-Local_Feature["Treasure Chests (Daily)"] = menu.add_feature("Treasure Chests (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.treasure_chests(pid)
-    end)
-end)
-
-Local_Feature["Jack O' Lanterns (Daily)"] = menu.add_feature("Jack O' Lanterns (Daily)", "action", Local_Parents["Collectibles"], function(f)
-    multi_selection_executor(function(pid)
-        lib.scriptevent.jack_o_lanterns(pid)
-    end)
-end)
+end
 
 Local_Feature["Exclude What's Selected"] = menu.add_feature("Exclude What's Selected", "toggle", Local_Parents["Multi Selection"], function(f) end)
 
@@ -3826,7 +3792,7 @@ Local_Feature["Ultra Lag Session"] = menu.add_feature("Ultra Lag Session", "togg
         entity.set_entity_gravity(LagPlayer[i], false)
     end
     NtwrkJetski = lib.entity.spawn_entity(gameplay.get_hash_key("A_M_Y_Jetski_01"), v3(10000, 10000, 2600), 0, false, true, false, true, false, false)
-    lua_notify(lib.player.get_player_name(pid).." received the ultra lag well.", f.name)
+    lua_notify(lib.player.get_player_name(pid) .. " received the ultra lag well.", f.name)
     while f.on do
         for i in ipairs(LagPlayer) do
             entity.attach_entity_to_entity(LagPlayer[i], NtwrkJetski, 0, v3(0, 0, 0), v3(math.random(0, 360), math.random(0, 360), math.random(0, 360)), false, true, false, 0, true)
@@ -4085,7 +4051,7 @@ Local_Feature["Notify Using Orbital Cannon"] = menu.add_feature("Using Orbital C
     end
     while f.on do
         for pid in lib.player.list(false) do
-            if player.get_player_coords(pid):magnitude(v3(329.02, 4828.75, -58.55)) < 8 then
+            if lib.essentials.distance_between(player.get_player_coords(pid), v3(329.04, 4828.71, -58.52)) < 8 then
                 if not IsInOrbitalCannonRoom[pid] then
                     lua_notify(Jaune..lib.player.get_player_name(pid)..BleuClair .. " entered the orbital cannon room.", f.name)
                 end
@@ -4315,7 +4281,7 @@ Local_Feature["Money Enable"] = menu.add_feature("Enable", "value_str", Local_Pa
                 lib.globals.remove_money(Local_Feature["Money Value"].value)
             end
         end
-        system.wait()
+        system.wait(500)
     end
     if f.value == 1 then
         if Local_Feature["Money Methode"].value == 0 then
@@ -4335,7 +4301,7 @@ Local_Feature["Money Enable"]:set_str_data({"Loop", "Once"})
 Local_Feature["Add 5k Chips"] = menu.add_feature("Add 5k Chips", "value_str", Local_Parents["Money Manager"], function(f)
     while f.on and f.value == 0 do
         lib.globals.chips_5k()
-        system.wait()
+        system.wait(500)
     end
     if f.value == 1 then
         lib.globals.chips_5k()
@@ -6295,35 +6261,6 @@ Local_Feature["Block Sync For (Seconds)"].min = 1
 Local_Feature["Block Sync For (Seconds)"].mod = 1
 Local_Feature["Block Sync For (Seconds)"].value = 5
 
-Local_Feature["Block Taylor Swift Crash"] = menu.add_feature("Block Taylor Swift Crash", "value_str", Local_Parents["Protection"], function(f)
-    while f.on do
-        for pid in lib.player.list(false) do
-            if ped.get_current_ped_weapon(player.get_player_ped(pid)) == 0 then
-                menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".block.block_net_cunts").on = true
-                local time <const> = utils.time_ms() + 1000
-                while time > utils.time_ms() do
-                    if ped.get_current_ped_weapon(player.get_player_ped(pid)) == 966099553 then
-                        lua_notify("Blocking Taylor Swift Crash by " .. lib.player.get_player_name(pid), "Crash Protection")
-                        if f.value == 0 and can_player_be_modder(pid, "Taylor Swift Crash") then
-                            lua_notify("Player: " .. lib.player.get_player_name(pid) .. "\nReason: Taylor Swift Crash", "Anarchy Modder Detection")
-                            player.set_player_as_modder(pid, ProtectionFlags["Taylor Swift Crash"])
-                        end
-                        goto Skip_Taylor_Swift
-                    end
-                    if ped.get_current_ped_weapon(player.get_player_ped(pid)) ~= 966099553 and ped.get_current_ped_weapon(player.get_player_ped(pid)) ~= 0 then
-                        menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".block.block_net_cunts").on = false
-                    end
-                    system.wait()
-                end
-                menu.get_feature_by_hierarchy_key("online.online_players.player_" .. pid .. ".block.block_net_cunts").on = false
-            end
-            ::Skip_Taylor_Swift::
-        end
-        system.wait()
-    end
-end)
-Local_Feature["Block Taylor Swift Crash"]:set_str_data({"Block & Notify", "Block"})
-
 Local_Feature["Block Crash"] = menu.add_feature("Block Crash", "value_str", Local_Parents["Protection"], function(f)
     while f.on do
         if not lib.globals.is_loading() then
@@ -6347,7 +6284,7 @@ Local_Feature["Block Crash"] = menu.add_feature("Block Crash", "value_str", Loca
                             lib.player.block_sync(pid, 10000)
                             entity.freeze_entity(ent, true)
                             entity.set_entity_as_no_longer_needed(ent)
-                            entity.set_entity_coords_no_offset(ent, v3(8000, 8000, -1000))
+                            entity.set_entity_coords_no_offset(ent, v3(10000, 10000, 2600))
                         end
                     end
                 end
@@ -6368,7 +6305,7 @@ Local_Feature["Block Crash"] = menu.add_feature("Block Crash", "value_str", Loca
                             lib.player.block_sync(pid, 10000)
                             entity.freeze_entity(ent, true)
                             entity.set_entity_as_no_longer_needed(ent)
-                            entity.set_entity_coords_no_offset(ent, v3(8000, 8000, -1000))
+                            entity.set_entity_coords_no_offset(ent, v3(10000, 10000, 2600))
                         end
                     end
                 end
@@ -6417,7 +6354,7 @@ Local_Feature["Block Lag"] = menu.add_feature("Block Lag", "value_str", Local_Pa
                                 lib.player.block_sync(pid, 10000)
                                 entity.freeze_entity(ent, true)
                                 entity.set_entity_as_no_longer_needed(ent)
-                                entity.set_entity_coords_no_offset(ent, v3(8000, 8000, -1000))
+                                entity.set_entity_coords_no_offset(ent, v3(10000, 10000, 2600))
                             end
                         end
                     end
@@ -7337,66 +7274,88 @@ for _, eVehicleClass in ipairs(lib.essentials.sort_table_alphabetically("left", 
         local vehicle_models_hash <const> = gameplay.get_hash_key(vehicle_name_x_model.left)
         if eVehicleClass.right == lib.natives.GET_VEHICLE_CLASS_FROM_NAME(vehicle_models_hash) then
             Local_Feature[vehicle_models_hash] = menu.add_feature(vehicle_name_x_model.right, "action", Local_Parents[eVehicleClass.right], function(f)
-                local pos, velocity, ent_pos
+                local pos, velocity, ent_veh
                 if player.is_player_in_any_vehicle(player.player_id()) then
                     velocity = entity.get_entity_velocity(player.player_vehicle())
-                    ent_pos = player.player_vehicle()
+                    ent_veh = player.player_vehicle()
                 else
                     velocity = entity.get_entity_velocity(player.player_ped())
-                    ent_pos = player.player_ped()
+                    ent_veh = player.player_ped()
                 end
                 if Local_Feature["Spawn In Front"].on then
-                    pos = lib.natives.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ent_pos, 0.0, lib.entity.get_hash_offset_dimension(vehicle_models_hash), 0.0)
+                    pos = lib.natives.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ent_veh, 0.0, lib.entity.get_hash_offset_dimension(vehicle_models_hash), 0.0)
                 else
-                    pos = entity.get_entity_coords(ent_pos)
+                    pos = entity.get_entity_coords(ent_veh)
                 end
+                local ground_z <const> = lib.essentials.get_ground_z(pos)
+                if (Local_Feature["Spawn Heli In The Air"].on and streaming.is_model_a_heli(vehicle_models_hash))
+                or (Local_Feature["Spawn Plane In The Air"].on and streaming.is_model_a_plane(vehicle_models_hash)) then
+                    pos = v3(pos.x, pos.y, ground_z + 25)
+                end
+                lib.essentials.request_model(vehicle_models_hash)
                 if Local_Feature["Delete Current Vehicle"].on and lib.player.is_player_driver(player.player_id()) then
                     entity.delete_entity(player.player_vehicle())
                 end
                 local spawn_vehicle <const> = lib.entity.spawn_entity(vehicle_models_hash, pos, player.get_player_heading(player.player_id()), true, Local_Feature["Spawn Invincible"].on, Local_Feature["Spawn Invisible"].on ~= true, false, true, Local_Feature["Spawn Not Networked"].on ~= true)
-                local previous_spawn <const> = spawn_vehicle
-                vehicle.set_vehicle_on_ground_properly(spawn_vehicle)
                 if Local_Feature["Spawn In Vehicle"].on then
                     ped.set_ped_into_vehicle(player.player_ped(), spawn_vehicle, -1)
                 end
+                if Local_Feature["Spawn Engine On"].on then
+                    vehicle.set_heli_blades_full_speed(spawn_vehicle)
+                    vehicle.set_vehicle_engine_on(spawn_vehicle, true, true, false)
+                end
+                system.wait()
+                vehicle.set_vehicle_on_ground_properly(spawn_vehicle)
+                lib.entity.downgrade(spawn_vehicle, false)
+                if Local_Feature["Tunings"].value == 1 then
+                    lib.entity.upgrade(spawn_vehicle, false)
+                elseif Local_Feature["Tunings"].value == 2 then
+                    lib.entity.upgrade(spawn_vehicle, true)
+                end
+                if lib.essentials.distance_between(v3(pos.x, pos.y, ground_z), pos) > 10 then
+                    vehicle.control_landing_gear(spawn_vehicle, 3)
+                end
                 if Local_Feature["Keep Velocity"].on then
                     entity.set_entity_velocity(spawn_vehicle, velocity)
+                end
+                system.wait()
+                if Local_Feature["Spawn Plane In The Air"].on and streaming.is_model_a_plane(vehicle_models_hash) then
+                    if entity.get_entity_speed(spawn_vehicle) < 50 then
+                        vehicle.set_vehicle_forward_speed(spawn_vehicle, 50)
+                    end
                 end
             end)
         end
     end
 end
 
-Local_Feature["Tunings"] = menu.add_feature("Tunings", "value_str", Local_Parents["Spawn Vehicle"], function(f)
+Local_Feature["Tunings"] = menu.add_feature("Tunings", "action_value_str", Local_Parents["Spawn Vehicle"], function(f)
 end)
-Local_Feature["Tunings"]:set_str_data({"Maxed", "", "", ""})
+Local_Feature["Tunings"]:set_str_data({"Downgrade", "Upgrade", "Upgrade Only Perf"})
 
-Local_Feature["Spawn Aircraft In The Air"] = menu.add_feature("Spawn Aircraft In The Air", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
-
+--[[
 Local_Feature["Modify License Plate"] = menu.add_feature("Modify License Plate", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
 
-Local_Feature["Spawn In Front"] = menu.add_feature("Spawn In Front", "toggle", Local_Parents["Spawn Vehicle"], function(f)
 end)
+]]
 
-Local_Feature["Spawn In Vehicle"] = menu.add_feature("Spawn In Vehicle", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
+local Spawn_Vehicle_Opt <const> = {
+    "Delete Current Vehicle",
+    "Keep Velocity",
+    "Spawn Engine On",
+    "Spawn In Front",
+    "Spawn In Vehicle",
+    "Spawn Invincible",
+    "Spawn Invisible",
+    "Spawn Not Networked",
+    "Spawn Heli In The Air",
+    "Spawn Plane In The Air",
+}
 
-Local_Feature["Spawn Invincible"] = menu.add_feature("Spawn Invincible", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
-
-Local_Feature["Spawn Invisible"] = menu.add_feature("Spawn Invisible", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
-
-Local_Feature["Spawn Not Networked"] = menu.add_feature("Spawn Not Networked", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
-
-Local_Feature["Keep Velocity"] = menu.add_feature("Keep Velocity", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
-
-Local_Feature["Delete Current Vehicle"] = menu.add_feature("Delete Current Vehicle", "toggle", Local_Parents["Spawn Vehicle"], function(f)
-end)
+for _, name in pairs(Spawn_Vehicle_Opt) do
+    Local_Feature[name] = menu.add_feature(name, "toggle", Local_Parents["Spawn Vehicle"], function(f)
+    end)
+end
 
 Local_Parents["Spawn Custom"] = menu.add_feature("Custom", "parent", Local_Parents["Spawn"]).id
 
@@ -8018,7 +7977,9 @@ Local_Feature["TV Player Display"] = menu.add_feature("Display", "value_str", Lo
         system.wait()
     end
 end)
-:set_str_data({"ABS_AG_SPON_PL_0", "ABS_CC_PL_0", "ABS_DM_PL_0", "ABS_NM_PL", "ABS_SPON_PL_0", "LOOP_APOC_BMBL", "LOOP_CONS_BMBL", "LOOP_SCIFI_BMBL", "PL_CINEMA_ACTION", "PL_DIX_GEO_FUNHOUSE", "PL_LES1_FAME_OR_SHAME", "PL_LO_CNT", "PL_LO_RS_CUTSCENE", "PL_MP_CCTV", "PL_MP_WEAZEL", "PL_SOL_GEO_FUNHOUSE", "PL_SP_INV_EXP", "PL_SP_INV", "PL_SP_PLSH1_INTRO", "PL_SP_WORKOUT", "PL_STD_CNT", "PL_STD_WZL", "PL_TBM_GEO_FUNHOUSE", "PL_TOU_GEO_FUNHOUSE", "PL_WEB_FOS", "PL_WEB_HOWITZER", "PL_WEB_KFLF", "PL_WEB_LR1", "PL_WEB_PRB2", "PL_WEB_RANGERS"})
+:set_str_data({"ABS_AG_SPON_PL_0", "ABS_CC_PL_0", "ABS_DM_PL_0", "ABS_NM_PL", "ABS_SPON_PL_0", "LOOP_APOC_BMBL", "LOOP_CONS_BMBL", "LOOP_SCIFI_BMBL", "PL_CINEMA_ACTION", "PL_DIX_GEO_FUNHOUSE",
+"PL_LES1_FAME_OR_SHAME", "PL_LO_CNT", "PL_LO_RS_CUTSCENE", "PL_MP_CCTV", "PL_MP_WEAZEL", "PL_SOL_GEO_FUNHOUSE", "PL_SP_INV_EXP", "PL_SP_INV", "PL_SP_PLSH1_INTRO", "PL_SP_WORKOUT", "PL_STD_CNT",
+"PL_STD_WZL", "PL_TBM_GEO_FUNHOUSE", "PL_TOU_GEO_FUNHOUSE", "PL_WEB_FOS", "PL_WEB_HOWITZER", "PL_WEB_KFLF", "PL_WEB_LR1", "PL_WEB_PRB2", "PL_WEB_RANGERS"})
 
 Local_Feature["TV Player Pos x"] = menu.add_feature("Pos x", "action_value_f", Local_Parents["TV Player"], function(f)
     local input_stat, input_val = input.get("Pos x from " .. f.min .. " to " .. f.max, "", 5, 5)
@@ -8902,21 +8863,9 @@ Local_Parents["Settings"] = menu.add_feature("Settings", "parent", Local_Parents
 Local_Parents["Player Feature"] = menu.add_feature("Player Feature", "parent", Local_Parents["Settings"]).id
 
 Local_Feature["Running Time Control Vehicle"] = menu.add_feature("Running Time Control Vehicle", "action_value_i", Local_Parents["Player Feature"], function(f)
-    local input_stat, input_val = input.get("Running Time Control Vehicle from " .. f.min .. " to " .. f.max, "", 7, 3)
-    if input_stat == 1 then
-        return HANDLER_CONTINUE
-    end
-    if input_stat == 2 then
-        lua_notify_alert("Input canceled.", f.name)
-        return HANDLER_POP
-    end
-    input_val = tonumber(input_val)
-    if input_val > f.max then
-        f.value = f.max
-    elseif input_val < f.min then
-        f.value = f.min
-    else
-        f.value = input_val
+    local input <const> = lib.essentials.input("Running Time Control Vehicle from " .. f.min .. " to " .. f.max, "", 7, 3, f, f.min, f.max)
+    if input then
+        f.value = input
     end
 end)
 Local_Feature["Running Time Control Vehicle"].max = 3000000

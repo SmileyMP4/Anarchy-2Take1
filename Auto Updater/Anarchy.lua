@@ -1,6 +1,6 @@
 menu.create_thread(function()
 
-local lua_version <const> = "1.2.1"
+local lua_version <const> = "3.1"
 
 local lua_update_date <const> = "21/12/2023"
 
